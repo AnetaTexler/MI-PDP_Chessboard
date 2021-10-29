@@ -1,40 +1,40 @@
 # MI-PDP_Chessboard
 Parallel and distributed programming
 
-Uloha JES: jezdec na šachovnici
+Task: Knight on a chessboard
 
-Vstupní data:
-k = přirozené číslo, k>5, reprezentující délku strany šachovnice S o velikosti kxk 
-q = přirozené číslo q<k2-1 reprezentující počet rozmístěných figurek na šachovnici S 
-F[1..q] = pole souřadnic rozmístěných figurek na šachovnici S 
-J = souřadnice jezdce na šachovnici S 
+Input data:
+k = a natural number, k > 5, size of a chessbord C (kxk) 
+q = a natural number, q < k^2-1, number of pieces on a chessboard C 
+F[1..q] = an array of coordinates of pieces 
+J = a coordinate of a knight 
 
-Pravidla a cíl hry:
-Na počátku je na čtvercové šachovnici S rozmístěno q figurek a 1 jezdec (kůň). Tomuto rozmístění figurek budeme říkat počáteční konfigurace. Jeden tah je skok jezdce podle šachových pravidel. Cílem hry je odstranit jezdcem všechny figurky s minimálním počtem tahů tak, aby na šachovnici zůstal samotný jezdec.
+Rules and game goal:
+At the beginning, there are q pieces and 1 knight (horse) on the square chessboard C. We will call this arrangement the initial configuration. One move is the knight's jump according to the chess rules. The aim of the game is to capture all pieces with a knight in a minimum number of moves so that only the knight himself remains on the board. 
 
-Výstup algoritmu:
-Minimální posloupnost tahů jezdce vedoucí do cíle (tj. vedoucí do stavu, kdy jezdec zůstává sám na šachovnici). Výstupem bude seznam souřadnic políček, kam jezdec táhne s označením hvězdičkou těch políček, kde došlo k odstranění figurky.
+Output of the algorithm:
+The minimum sequence of knight's moves leading to the goal (i.e. state where the knight remains alone on the board). The output will be a list of coordinates where the knight moves with an asterisk mark of the squares where a piece was captured. 
 
-Definice:
-Funkce val(X) ohodnotí libovolné políčko X šachovnice S následujícím způsobem: obsahuje-li políčko X figurku, vrací funkce val(X) hodnotu 1, jinak vrací hodnotu 0. Úspěšnost tahu jezdce na políčko X můžeme definovat jako funkci:
+Definition:
+Function val(X) evaluates any square X of the chessboard C as follows: if the square X contains a piece, the function val(X) returns the value 1, otherwise it returns the value 0. The success of the knight's move to the square X can be defined as a function: 
 
-U(X) = 8*val(X)-vzdalenost_z_X_k_nejblizsi_figurce
+U(X) = 8*val(X) - distance_from_X_to_nearest_piece
 
-Sekvenční algoritmus:
-Sekvenční algoritmus je typu BB-DFS s hloubkou prohledávaného prostoru omezenou horní mezí (viz dále). Řešení vždy existuje. 
-Přípustný koncový stav je situace, kdy na šachovnici zůstane samotný jezdec.
-Cena, kterou minimalizujeme, je počet tahů, kterými se lze do koncového stavu z počáteční konfigurace dostat.
-Algoritmus končí, když je cena rovna dolní mezi (viz dále) a nebo když se prohledá celý stavový prostor do hloubky dané horní mezí. 
-Doporučení pro implementaci: při implementaci sekvenčního algoritmu provádějte následníky X aktuálního políčka jezdce Y v pořadí klesající funkce úspěšnosti U(X) tahu na políčko X. Tím vlastně přednostně skáčete na políčka, kde můžete okamžitě sebrat figurku a je šance sebrat další figurku na co nejméně tahů.
-Dolní mez na cenu řešení je q, neboť v jednom tahu může jezdec sebrat maximálně jednu figurku, a proto řešení nemůžeme nalézt rychleji než v q tazích.
+Sequential algorithm:
+A BB-DFS type with the depth of the searched space limited by the upper bound (see below). There is always a solution.
+The permissible end state is a situation where the knight himself remains on the board. 
+The cost we minimize is the number of moves to get to the final state from the initial configuration.
+The algorithm ends when the cost is equal to the lower bound (see below) or when the entire state space is searched to a depth given by the upper bound. 
 
-Horní mez na cenu řešení je k*k-1, neboť toto je minimální počet tahů, kdy jezdec navštíví všechna políčka šachovnice S. Tato mez je v některých situacích příliš pesimistická, proto bude doporučená hodnota horní meze uvedena přímo v datovém souboru s počáteční konfigurací.
+Recommendation for implementation: when implementing a sequential algorithm, make successors X of the current square of knight Y in the order of decreasing success function U (X) of the move to square X. This actually jumps to the squares where you can immediately capture a piece and there is a change to capture a piece in minimum moves.
+The lower bound on the cost of the solution is q, because the knight can pick up a maximum of one piece in one move, and therefore we cannot find a solution faster than in q moves. 
 
-Prořezávání větví stromu. Nemá smysl hledat řešení ve stejné nebo větší hloubce, než je už nalezené minimum (akt_min). Proto musí platit:
+The upper bound on the cost of the solution is k * k-1, as this is the minimum number of moves when the knight visits all squares of the chessboard C. This bound is too pessimistic in some situations, so the recommended upper bound value will be given directly in the initial configuration data file.
 
-akt_hloubka + (q-uz_sebrano_figurek) < akt_min,
+Pruning tree branches: It does not make sense to look for a solution at the same or greater depth than the minimum already found (curr_min). Therefore: 
 
-jinak je větev ukončena.
+curr_depth + (q - num_of_captured_pieces) < curr_min,
 
-Paralelní algoritmus:
-Paralelní algoritmus je typu Master-Slave.
+else the branch is terminated.
+
+Parallel algorithm: task and data parallelism (OpenMP), Master-Slave (MPI).
