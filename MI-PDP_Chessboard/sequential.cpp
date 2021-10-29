@@ -9,13 +9,16 @@
 #include "math.h"
 #include <chrono>
 
+#define SEQUENTIAL
+#ifdef SEQUENTIAL
+
 using namespace std;
 
 vector<pair<int, int>> g_resultMoves; // gives actual depth and number of moves (price) 
 
-// Parse a file
-void parseFile(ifstream & file, int & chessboardLen, int & upperBound, int & placedFiguresCnt, vector<pair<int, int>> & placedFiguresCoordinates, 
-			   pair<int, int> & horseCoordinates)
+									  // Parse a file
+void parseFile(ifstream & file, int & chessboardLen, int & upperBound, int & placedFiguresCnt, vector<pair<int, int>> & placedFiguresCoordinates,
+	pair<int, int> & horseCoordinates)
 {
 	string line;
 	getline(file, line);
@@ -52,20 +55,20 @@ bool containsFigure(const pair<int, int> & coordinatesToCheck, const vector<pair
 // Return success rate of the specific move - on the box X: (SR(X) = 8*containsFigure(X) - distanceFromXToTheClosestFigure)
 int getMoveSuccessRate(const pair<int, int> & moveCoordinates, const vector<pair<int, int>> & placedFiguresCoordinates, const int chessboardLen)
 {
-	int successRate = - (2 * chessboardLen - 2); // the biggest possible distance
+	int successRate = -(2 * chessboardLen - 2); // the biggest possible distance
 
 	if (containsFigure(moveCoordinates, placedFiguresCoordinates))
 		successRate = 8 * 1 - 0;
 	else
 	{
-		for each (pair<int, int> figCoordinates in placedFiguresCoordinates)
+		for (pair<int, int> figCoordinates : placedFiguresCoordinates)
 		{
 			int tmp = 8 * 0 - (abs(moveCoordinates.first - figCoordinates.first) + abs(moveCoordinates.second - figCoordinates.second));
 			if (tmp > successRate)
 				successRate = tmp;
 		}
 	}
-	
+
 	return successRate;
 }
 
@@ -100,9 +103,9 @@ bool sortDesc(const pair<int, pair<int, int>> &a, const pair<int, pair<int, int>
 	return (a.first > b.first);
 }
 
-// Recursive function for search in state space
-void solveInstance(const int chessboardLen, const int upperBound, const int placedFiguresCnt, vector<pair<int, int>> placedFiguresCoordinates, 
-				   pair<int, int> horseCoordinates, vector<pair<int, int>> resultMoves)
+// Sequent recursive function for search in state space
+void solveInstance(const int chessboardLen, const int upperBound, const int placedFiguresCnt, vector<pair<int, int>> placedFiguresCoordinates,
+	pair<int, int> horseCoordinates, vector<pair<int, int>> resultMoves)
 {
 	if (placedFiguresCoordinates.empty()) // all figures removed by horse
 	{
@@ -122,35 +125,33 @@ void solveInstance(const int chessboardLen, const int upperBound, const int plac
 	vector<pair<int, pair<int, int>>> ratedValidMoves;
 
 	// count move success rate for each valid move
-	for each (pair<int, int> validMove in validMoves)
+	for (pair<int, int> validMove : validMoves)
 	{
 		int successRate = getMoveSuccessRate(validMove, placedFiguresCoordinates, chessboardLen);
 		ratedValidMoves.push_back(make_pair(successRate, validMove));
 	}
 
 	sort(ratedValidMoves.begin(), ratedValidMoves.end(), sortDesc); // the closest figures first
-	
-	if (resultMoves.size() == 0) 
+
+	if (resultMoves.size() == 0)
 		resultMoves.push_back(horseCoordinates); // start horse position
 
-	for each (pair<int, pair<int, int>> ratedValidMove in ratedValidMoves)
+	for (pair<int, pair<int, int>> ratedValidMove : ratedValidMoves)
 	{
+		vector<pair<int, int>> placedFiguresCoordinatesCopy = placedFiguresCoordinates;
+		vector<pair<int, int>> resultMovesCopy = resultMoves;
+
 		// remove figure from vector placedFiguresCoordinates
 		if (ratedValidMove.first == 8)
-			placedFiguresCoordinates.erase(remove(placedFiguresCoordinates.begin(), placedFiguresCoordinates.end(), ratedValidMove.second), placedFiguresCoordinates.end());
+			placedFiguresCoordinatesCopy.erase(remove(placedFiguresCoordinatesCopy.begin(), placedFiguresCoordinatesCopy.end(), ratedValidMove.second), placedFiguresCoordinatesCopy.end());
+
 		// add move if is not the same like the penultimate move (that would mean the loop until the upper bound is achieved)
-		//if (resultMoves.size() > 1 && ratedValidMove.first != 8 && resultMoves[resultMoves.size() - 2] == ratedValidMove.second) continue; // detection of loops
-		resultMoves.push_back(ratedValidMove.second);
-		// RECURSION
-		solveInstance(chessboardLen, upperBound, placedFiguresCnt, placedFiguresCoordinates, ratedValidMove.second, resultMoves);
-		// push the removed figure back to the vector
-		if (ratedValidMove.first == 8)
-			placedFiguresCoordinates.push_back(ratedValidMove.second);
-		// remove move
-		resultMoves.pop_back();
+		resultMovesCopy.push_back(ratedValidMove.second);
+
+		// RECURSION CALL
+		solveInstance(chessboardLen, upperBound, placedFiguresCnt, placedFiguresCoordinatesCopy, ratedValidMove.second, resultMovesCopy);
 	}
 }
-
 
 
 int main()
@@ -160,22 +161,22 @@ int main()
 	struct dirent * entry;
 	int chessboardLen = 0, upperBound = 0, placedFiguresCnt = 0;
 	vector<pair<int, int>> placedFiguresCoordinates, resultMoves;
-	pair<int, int> horseCoordinates (0, 0);
+	pair<int, int> horseCoordinates(0, 0);
 
 	dir = opendir(dirPath.c_str());
-	if (dir != NULL) 
+	if (dir != NULL)
 	{
-		while (entry = readdir(dir)) 
+		while (entry = readdir(dir))
 		{
 			if ((string)(entry->d_name) == "." || (string)(entry->d_name) == "..") continue;
-			ifstream ifs(dirPath + "\\" + (string)(entry->d_name));
-			
+			ifstream ifs(dirPath + "/" + (string)(entry->d_name));
+
 			parseFile(ifs, chessboardLen, upperBound, placedFiguresCnt, placedFiguresCoordinates, horseCoordinates);
-			
+
 			auto start = chrono::system_clock::now();
-			
+
 			solveInstance(chessboardLen, upperBound, placedFiguresCnt, placedFiguresCoordinates, horseCoordinates, resultMoves);
-			
+
 			auto end = chrono::system_clock::now();
 			long long millis = chrono::duration_cast<chrono::milliseconds>(end - start).count();
 
@@ -185,7 +186,7 @@ int main()
 			else
 			{
 				cout << "Time: " << millis / 1000.0 << "s, Count: " << g_resultMoves.size() - 1 << ", Moves: ";
-				for each (pair<int, int> resultMove in g_resultMoves)
+				for (pair<int, int> resultMove : g_resultMoves)
 				{
 					cout << "(" << resultMove.first << "," << resultMove.second << ")";
 					if (containsFigure(resultMove, placedFiguresCoordinates))
@@ -201,7 +202,7 @@ int main()
 
 			ifs.close();
 		}
-		
+
 	}
 	closedir(dir);
 
@@ -209,3 +210,5 @@ int main()
 
 	return 0;
 }
+
+#endif
