@@ -39,7 +39,7 @@ public:
 	}
 };
 
-vector<pair<int, int>> g_resultMoves; // gives actual depth and number of moves (price) 
+vector<pair<int, int>> g_resultMoves; // gives actual depth and number of moves (cost) 
 vector<Task> g_taskPool;
 vector<pair<int, int>> g_placedFiguresStart; // for preservation of start status
 
@@ -141,7 +141,7 @@ void solveInstanceSEQ(const int chessboardLen, const int upperBound, vector<pair
 			return;
 		}
 
-		// needless to search in the same or higher depth than actual minimum ( = best price = g_resultMoves.size()) OR upperBound is achieved
+		// needless to search in the same or higher depth than actual minimum ( = best cost = g_resultMoves.size()) OR upperBound is achieved
 		if ((g_resultMoves.size() != 0 && (resultMoves.size() + placedFiguresCoordinates.size() >= g_resultMoves.size())) || resultMoves.size() > upperBound)
 			return;
 
