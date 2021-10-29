@@ -18,7 +18,7 @@ using namespace std;
 // COMPILE COMMAND
 // g++ -fopenmp main.cpp 
 
-vector<pair<int, int>> g_resultMoves; // gives actual depth and number of moves (price) 
+vector<pair<int, int>> g_resultMoves; // gives actual depth and number of moves (cost) 
 
 // Parse a file
 void parseFile(ifstream & file, int & chessboardLen, int & upperBound, int & placedFiguresCnt, vector<pair<int, int>> & placedFiguresCoordinates,
@@ -120,7 +120,7 @@ void solveInstanceSEQ(const int chessboardLen, const int upperBound, const int p
 		return;
 	}
 
-	// needless to search in the same or higher depth than actual minimum ( = best price = RESULT_MOVES.size()) OR upperBound is achieved
+	// needless to search in the same or higher depth than actual minimum ( = best cost = RESULT_MOVES.size()) OR upperBound is achieved
 	if ((g_resultMoves.size() != 0 && (resultMoves.size() + placedFiguresCoordinates.size() >= g_resultMoves.size()))
 		|| resultMoves.size() > upperBound)
 		return;
@@ -174,7 +174,7 @@ void solveInstanceOMP(const int chessboardLen, const int upperBound, const int p
 			exit = true;
 		}
 
-		// needless to search in the same or higher depth than actual minimum ( = best price = g_resultMoves.size()) OR upperBound is achieved
+		// needless to search in the same or higher depth than actual minimum ( = best cost = g_resultMoves.size()) OR upperBound is achieved
 		if ((g_resultMoves.size() != 0 && (resultMoves.size() + placedFiguresCoordinates.size() >= g_resultMoves.size())) || resultMoves.size() > upperBound)
 			//return;
 			exit = true; 
